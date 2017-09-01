@@ -1,8 +1,13 @@
-package com.example.fanenqian.snowview;
+package com.example.snowflake;
 
+import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
+import android.graphics.PixelFormat;
 import android.graphics.Point;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.NinePatchDrawable;
 
 /**
  * Created by fanenqian on 2017/8/31.
@@ -28,25 +33,27 @@ public class SnowFlake {
     private final float mIncrement; // 雪花的速度
     private final float mFlakeSize; // 雪花的大小
     private final Paint mPaint; // 画笔
+    private Drawable flakeSrc;//雪花样式
 
-    private SnowFlake(RandomGenerator random, Point position, float angle, float increment, float flakeSize, Paint paint) {
+    private SnowFlake(RandomGenerator random, Point position, float angle, float increment, float flakeSize, Paint paint, Drawable draSrc) {
         mRandom = random;
         mPosition = position;
         mIncrement = increment;
         mFlakeSize = flakeSize;
         mPaint = paint;
         mAngle = angle;
+        flakeSrc = draSrc;
     }
 
-    public static SnowFlake create(int width, int height, Paint paint) {
+    public static SnowFlake create(int width, int height, Paint paint, int minSize, int maxSize, Drawable flakeSrc, float spMin, float spMax) {
         RandomGenerator random = new RandomGenerator();
         int x = random.getRandom(width);
         int y = random.getRandom(height);
         Point position = new Point(x, y);
         float angle = random.getRandom(ANGLE_SEED) / ANGLE_SEED * ANGE_RANGE + HALF_PI - HALF_ANGLE_RANGE;
-        float increment = random.getRandom(INCREMENT_LOWER, INCREMENT_UPPER);
-        float flakeSize = random.getRandom(FLAKE_SIZE_LOWER, FLAKE_SIZE_UPPER);
-        return new SnowFlake(random, position, angle, increment, flakeSize, paint);
+        float increment = random.getRandom(spMin, spMax);
+        float flakeSize = random.getRandom(minSize, maxSize);
+        return new SnowFlake(random, position, angle, increment, flakeSize, paint, flakeSrc);
     }
 
     //绘制雪花
@@ -54,7 +61,11 @@ public class SnowFlake {
         int width = canvas.getWidth();
         int height = canvas.getHeight();
         move(width, height);
-        canvas.drawCircle(mPosition.x, mPosition.y, mFlakeSize, mPaint);
+        if (null != flakeSrc) {
+            canvas.drawBitmap(drawable2Bitmap(flakeSrc), mPosition.x, mPosition.y, mPaint);
+        } else {
+            canvas.drawCircle(mPosition.x, mPosition.y, mFlakeSize, mPaint);
+        }
     }
 
     //移动雪花
@@ -81,5 +92,32 @@ public class SnowFlake {
         mPosition.x = mRandom.getRandom(width);
         mPosition.y = (int) (-mFlakeSize - 1); // 最上面
         mAngle = mRandom.getRandom(ANGLE_SEED) / ANGLE_SEED * ANGE_RANGE + HALF_PI - HALF_ANGLE_RANGE;
+    }
+
+    /**
+     * Drawable 转 bitmap
+     *
+     * @param drawable
+     * @return
+     */
+    public static Bitmap drawable2Bitmap(Drawable drawable) {
+        if (drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable) drawable).getBitmap();
+        } else if (drawable instanceof NinePatchDrawable) {
+            Bitmap bitmap = Bitmap
+                    .createBitmap(
+                            drawable.getIntrinsicWidth(),
+                            drawable.getIntrinsicHeight(),
+                            drawable.getOpacity() != PixelFormat.OPAQUE ? Bitmap.Config.ARGB_8888
+                                    : Bitmap.Config.RGB_565);
+            Canvas canvas = new Canvas(bitmap);
+            drawable.setBounds(0, 0, drawable.getIntrinsicWidth(),
+                    drawable.getIntrinsicHeight());
+            drawable.draw(canvas);
+            return bitmap;
+        } else {
+            return null;
+        }
+
     }
 }

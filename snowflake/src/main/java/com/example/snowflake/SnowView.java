@@ -1,4 +1,4 @@
-package com.example.fanenqian.snowview;
+package com.example.snowflake;
 
 import android.content.Context;
 import android.content.res.TypedArray;
@@ -11,9 +11,14 @@ import android.util.AttributeSet;
 import android.view.View;
 
 public class SnowView extends View {
-    private static final int NUM_SNOWFLAKES = 150; // 雪花数量
+    private int flakeCount;// 雪花数量
     private static final int DELAY = 5; // 延迟
     private SnowFlake[] mSnowFlakes; // 雪花
+    private int minSize;
+    private int maxSize;
+    private Drawable flakeSrc;
+    private float spMin;
+    private float spMax;
 
     public SnowView(Context context) {
         super(context);
@@ -21,6 +26,7 @@ public class SnowView extends View {
 
     public SnowView(Context context, @Nullable AttributeSet attrs) {
         super(context, attrs);
+        initattrs(context, attrs);
     }
 
     public SnowView(Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
@@ -30,13 +36,12 @@ public class SnowView extends View {
 
     private void initattrs(Context context, AttributeSet attrs) {
         TypedArray typedArray = context.obtainStyledAttributes(attrs, R.styleable.Snow);
-        int flakeCount = typedArray.getInt(R.styleable.Snow_flakeCount, 150);
-        int minSize = typedArray.getInt(R.styleable.Snow_minSize, 5);
-        int maxSize = typedArray.getInt(R.styleable.Snow_maxSize, 10);
-        Drawable flakeSrc = typedArray.getDrawable(R.styleable.Snow_flakeSrc);
-        float spX = typedArray.getFloat(R.styleable.Snow_speedX, 10);
-        float spY = typedArray.getFloat(R.styleable.Snow_speedY, 10);
-
+        flakeCount = typedArray.getInt(R.styleable.Snow_flakeCount, 150);
+        minSize = typedArray.getInt(R.styleable.Snow_minSize, 7);
+        maxSize = typedArray.getInt(R.styleable.Snow_maxSize, 20);
+        flakeSrc = typedArray.getDrawable(R.styleable.Snow_flakeSrc);
+        spMin = typedArray.getFloat(R.styleable.Snow_minSpeed, 2);
+        spMax = typedArray.getFloat(R.styleable.Snow_maxSpeed, 4);
     }
 
     @Override
@@ -51,9 +56,9 @@ public class SnowView extends View {
         Paint paint = new Paint(Paint.ANTI_ALIAS_FLAG); // 抗锯齿
         paint.setColor(Color.WHITE); // 白色雪花
         paint.setStyle(Paint.Style.FILL); // 填充;
-        mSnowFlakes = new SnowFlake[NUM_SNOWFLAKES];
-        for (int i = 0; i < NUM_SNOWFLAKES; ++i) {
-            mSnowFlakes[i] = SnowFlake.create(width, height, paint);
+        mSnowFlakes = new SnowFlake[flakeCount];
+        for (int i = 0; i < flakeCount; ++i) {
+            mSnowFlakes[i] = SnowFlake.create(width, height, paint, minSize, maxSize, flakeSrc, spMin, spMax);
         }
     }
 

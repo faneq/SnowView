@@ -1,4 +1,4 @@
-package com.example.fanenqian.snowview;
+package com.example.snowflake;
 
 import java.util.Random;
 
